@@ -1,23 +1,20 @@
 pipeline {
-    agent any
-
-    stages {
-        stage('Build') {
-            steps {
-                echo 'Building...'
-                sh './mvnw clean package'
-            }
+    agent {
+        docker {
+            image 'maven:3.9.1-amazoncorretto-20'
+            args '-u root'
         }
+    }
+    stages {
         stage('Test') {
             steps {
-                echo 'Testing...'
-                sh './mvnw test'
+                sh 'mvn clean test'
             }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying...'
-                sh './mvnw spring-boot:run'
+            post {
+                always {
+                    // Publish the TestNG report
+                    junit 'target/surefire-reports/*.xml'
+                }
             }
         }
     }
